@@ -35,7 +35,7 @@ public class EishayCodecOnlyJSONB {
 
     @Benchmark
     public void deserialize_jsonb(Blackhole bh) {
-        bh.consume(JSONB.parseObject(fastjson2JSONBBytes, MediaContent.class));
+        bh.consume(JSONB.parseObject(fastjson2JSONBBytes, MediaContent.class, JSONReader.Feature.SupportAutoType));
     }
 
     @Benchmark
@@ -48,6 +48,7 @@ public class EishayCodecOnlyJSONB {
         Options options = new OptionsBuilder()
                 .include(EishayCodecOnlyJSONB.class.getName())
                 .mode(Mode.Throughput)
+                .warmupIterations(3)
                 .timeUnit(TimeUnit.MILLISECONDS)
                 .forks(1)
                 .build();
