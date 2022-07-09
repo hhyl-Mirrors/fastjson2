@@ -27,7 +27,7 @@ public class EishayCodecOnlyJSONB {
             mc = JSONReader.of(str)
                     .read(MediaContent.class);
 
-            fastjson2JSONBBytes = JSONB.toBytes(mc);
+            fastjson2JSONBBytes = JSONB.toBytes(mc, JSONWriter.Feature.WriteClassName);
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
