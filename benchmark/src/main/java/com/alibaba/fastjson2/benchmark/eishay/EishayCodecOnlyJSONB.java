@@ -20,6 +20,25 @@ public class EishayCodecOnlyJSONB {
     static MediaContent mc;
     static byte[] fastjson2JSONBBytes;
 
+    static final JSONWriter.Feature[] jsonbWriteFeatures = {
+            JSONWriter.Feature.WriteClassName,
+            JSONWriter.Feature.IgnoreNoneSerializable,
+            JSONWriter.Feature.FieldBased,
+            JSONWriter.Feature.ReferenceDetection,
+            JSONWriter.Feature.WriteNulls,
+            JSONWriter.Feature.NotWriteDefaultValue,
+            JSONWriter.Feature.NotWriteHashMapArrayListClassName,
+            JSONWriter.Feature.WriteNameAsSymbol
+    };
+
+    static final JSONReader.Feature[] jsonbReaderFeatures = {
+            JSONReader.Feature.SupportAutoType,
+            JSONReader.Feature.IgnoreNoneSerializable,
+            JSONReader.Feature.UseDefaultConstructorAsPossible,
+            JSONReader.Feature.UseNativeObject,
+            JSONReader.Feature.FieldBased
+    };
+
     static {
         try {
             InputStream is = EishayParseBinary.class.getClassLoader().getResourceAsStream("data/eishay.json");
@@ -27,7 +46,7 @@ public class EishayCodecOnlyJSONB {
             mc = JSONReader.of(str)
                     .read(MediaContent.class);
 
-            fastjson2JSONBBytes = JSONB.toBytes(mc, JSONWriter.Feature.WriteClassName);
+            fastjson2JSONBBytes = JSONB.toBytes(mc, jsonbWriteFeatures);
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
@@ -35,12 +54,13 @@ public class EishayCodecOnlyJSONB {
 
     @Benchmark
     public void deserialize_jsonb(Blackhole bh) {
-        bh.consume(JSONB.parseObject(fastjson2JSONBBytes, Object.class, JSONReader.Feature.SupportAutoType));
+        MediaContent obj = (MediaContent) JSONB.parseObject(fastjson2JSONBBytes, Object.class, jsonbReaderFeatures);
+        bh.consume(obj);
     }
 
     @Benchmark
     public void serialize_jsonb(Blackhole bh) {
-        byte[] bytes = JSONB.toBytes(mc, JSONWriter.Feature.WriteClassName);
+        byte[] bytes = JSONB.toBytes(mc, jsonbWriteFeatures);
         bh.consume(bytes);
     }
 
