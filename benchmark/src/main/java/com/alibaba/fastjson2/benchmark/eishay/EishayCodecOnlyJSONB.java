@@ -1,6 +1,7 @@
 package com.alibaba.fastjson2.benchmark.eishay;
 
 import com.alibaba.fastjson2.JSONB;
+import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONReader;
 import com.alibaba.fastjson2.JSONWriter;
 import com.alibaba.fastjson2.benchmark.eishay.vo.MediaContent;
@@ -22,7 +23,6 @@ public class EishayCodecOnlyJSONB {
 
     static final JSONWriter.Feature[] jsonbWriteFeatures = {
             JSONWriter.Feature.WriteClassName,
-            JSONWriter.Feature.IgnoreNoneSerializable,
             JSONWriter.Feature.FieldBased,
             JSONWriter.Feature.ReferenceDetection,
             JSONWriter.Feature.WriteNulls,
@@ -33,7 +33,6 @@ public class EishayCodecOnlyJSONB {
 
     static final JSONReader.Feature[] jsonbReaderFeatures = {
             JSONReader.Feature.SupportAutoType,
-            JSONReader.Feature.IgnoreNoneSerializable,
             JSONReader.Feature.UseDefaultConstructorAsPossible,
             JSONReader.Feature.UseNativeObject,
             JSONReader.Feature.FieldBased
@@ -47,6 +46,11 @@ public class EishayCodecOnlyJSONB {
                     .read(MediaContent.class);
 
             fastjson2JSONBBytes = JSONB.toBytes(mc, jsonbWriteFeatures);
+
+            MediaContent obj = (MediaContent) JSONB.parseObject(fastjson2JSONBBytes, Object.class, jsonbReaderFeatures);
+            if (!mc.equals(obj)) {
+                throw new JSONException("not equals");
+            }
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
