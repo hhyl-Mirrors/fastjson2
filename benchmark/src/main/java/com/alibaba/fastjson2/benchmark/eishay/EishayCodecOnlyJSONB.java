@@ -18,8 +18,11 @@ import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 public class EishayCodecOnlyJSONB {
+    static final Blackhole BH = new Blackhole("Today's password is swordfish. I understand instantiating Blackholes directly is dangerous.");
+
     static MediaContent mc;
-    static byte[] fastjson2JSONBBytes;
+    static byte[] jsonbBytes;
+    static byte[] jsonbBytesArrayMapping;
 
     static final JSONWriter.Feature[] jsonbWriteFeatures = {
             JSONWriter.Feature.WriteClassName,
@@ -31,11 +34,23 @@ public class EishayCodecOnlyJSONB {
             JSONWriter.Feature.WriteNameAsSymbol
     };
 
+    static final JSONWriter.Feature[] jsonbWriteFeaturesArrayMapping = {
+            JSONWriter.Feature.WriteClassName,
+            JSONWriter.Feature.FieldBased,
+            JSONWriter.Feature.ReferenceDetection,
+            JSONWriter.Feature.WriteNulls,
+            JSONWriter.Feature.NotWriteDefaultValue,
+            JSONWriter.Feature.NotWriteHashMapArrayListClassName,
+            JSONWriter.Feature.WriteNameAsSymbol,
+            JSONWriter.Feature.BeanToArray
+    };
+
     static final JSONReader.Feature[] jsonbReaderFeatures = {
             JSONReader.Feature.SupportAutoType,
             JSONReader.Feature.UseDefaultConstructorAsPossible,
             JSONReader.Feature.UseNativeObject,
-            JSONReader.Feature.FieldBased
+            JSONReader.Feature.FieldBased,
+            JSONReader.Feature.SupportArrayToBean
     };
 
     static {
@@ -45,26 +60,44 @@ public class EishayCodecOnlyJSONB {
             mc = JSONReader.of(str)
                     .read(MediaContent.class);
 
-            fastjson2JSONBBytes = JSONB.toBytes(mc, jsonbWriteFeatures);
+            jsonbBytes = JSONB.toBytes(mc, jsonbWriteFeatures);
+            jsonbBytesArrayMapping = JSONB.toBytes(mc, jsonbWriteFeaturesArrayMapping);
 
-            MediaContent obj = (MediaContent) JSONB.parseObject(fastjson2JSONBBytes, Object.class, jsonbReaderFeatures);
+            MediaContent obj = (MediaContent) JSONB.parseObject(jsonbBytes, Object.class, jsonbReaderFeatures);
             if (!mc.equals(obj)) {
                 throw new JSONException("not equals");
             }
+
+            MediaContent obj2 = (MediaContent) JSONB.parseObject(jsonbBytesArrayMapping, Object.class, jsonbReaderFeatures);
+            if (!mc.equals(obj2)) {
+                throw new JSONException("not equals");
+            }
+
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
     }
-
     @Benchmark
     public void deserialize_jsonb(Blackhole bh) {
-        MediaContent obj = (MediaContent) JSONB.parseObject(fastjson2JSONBBytes, Object.class, jsonbReaderFeatures);
+        MediaContent obj = (MediaContent) JSONB.parseObject(jsonbBytes, Object.class, jsonbReaderFeatures);
+        bh.consume(obj);
+    }
+
+    @Benchmark
+    public void deserialize_jsonbArrayMapping(Blackhole bh) {
+        MediaContent obj = (MediaContent) JSONB.parseObject(jsonbBytesArrayMapping, Object.class, jsonbReaderFeatures);
         bh.consume(obj);
     }
 
     @Benchmark
     public void serialize_jsonb(Blackhole bh) {
         byte[] bytes = JSONB.toBytes(mc, jsonbWriteFeatures);
+        bh.consume(bytes);
+    }
+
+    @Benchmark
+    public void serialize_jsonb_arrayMapping(Blackhole bh) {
+        byte[] bytes = JSONB.toBytes(mc, jsonbWriteFeaturesArrayMapping);
         bh.consume(bytes);
     }
 
