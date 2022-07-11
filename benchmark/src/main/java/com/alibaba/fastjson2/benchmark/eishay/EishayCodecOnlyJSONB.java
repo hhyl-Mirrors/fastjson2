@@ -72,7 +72,6 @@ public class EishayCodecOnlyJSONB {
             if (!mc.equals(obj2)) {
                 throw new JSONException("not equals");
             }
-
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
